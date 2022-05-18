@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_STR_SIZE 64
+#define MAX_STR_SIZE 200
 
 int main(int argc, char* argv[]){
 
@@ -51,37 +51,41 @@ int main(int argc, char* argv[]){
 
 
 	char* phrase = (char*)malloc(MAX_STR_SIZE * sizeof(char));
+    //memset(phrase, 32, MAX_STR_SIZE);
+
 	int phraseSize = 0, count = 0;
 	
 	for(int i = 0; i < N; i++) {
-		phrase[phraseSize] = txt[i];
-		if (txt[i] == '\0') {   //VERIFICAR SE E POSSIVEL
-            printf("count : %d \n size : %d", count, phraseSize);
-			if (phraseSize != 0) {
-                count++;
-                if (flagOn) {
-                    printf("[%d] %s\n", count, phrase);
-                }
-            } 
-			break;
-		}
-        else if (txt[i] == '.' || txt[i] == '?' || txt[i] == '!') {
+        if (phraseSize >= MAX_STR_SIZE){
+            printf("String too long!\n");
+            return 0;
+        }
+        if (txt[i] == ' ' || txt[i] == '\n' || txt[i] == '\t') {
+            phrase[phraseSize] = ' ';
+            phraseSize++;
+            while (txt[i+1] == ' ' || txt[i+1] == '\n' || txt[i+1] == '\t') i++;
+        }
+		else {
+            phrase[phraseSize] = txt[i];
+            phraseSize++;
+        }
+        if (txt[i] == '.' || txt[i] == '?' || txt[i] == '!') {
             count++;
+            phrase[phraseSize] = '\0';
             if (flagOn) {
                 printf("[%d] %s\n", count, phrase);
             }
             while (txt[i+1] == ' ' || txt[i+1] == '\n' || txt[i+1] == '\t') i++;
-            //limpar phrase
-            //memset(&phrase, 0, MAX_STR_SIZE);
-            phrase = (char*)malloc(MAX_STR_SIZE * sizeof(char));
+            //memset(phrase, 32, MAX_STR_SIZE);
 			phraseSize = 0;
             continue;
 		}
-        phraseSize++;
+        else if (txt[i] == '\0') break;
 	}
     
     if (phraseSize != 0) {
         count++;
+        phrase[phraseSize] = '\0';
         if (flagOn) {
             printf("[%d] %s\n", count, phrase);
         }
