@@ -50,34 +50,30 @@ int main(int argc, char* argv[]){
       
 
 
-	char* phrase = (char*)malloc(MAX_STR_SIZE * sizeof(char));
+	
 	int phraseSize = 0, count = 0;
+    char* phrase = (char*)malloc(sizeof(char) * 1);
+    phrase[0] = '\0';
 	
 	for(int i = 0; i < N; i++) {
+        phrase = realloc(phrase, sizeof(char) * phraseSize + 2);
 		phrase[phraseSize] = txt[i];
-		if (txt[i] == '\0') {   //VERIFICAR SE E POSSIVEL
-            printf("count : %d \n size : %d", count, phraseSize);
-			if (phraseSize != 0) {
-                count++;
-                if (flagOn) {
-                    printf("[%d] %s\n", count, phrase);
-                }
-            } 
-			break;
-		}
-        else if (txt[i] == '.' || txt[i] == '?' || txt[i] == '!') {
+        phrase[phraseSize + 1] = '\0';
+        phraseSize++;
+
+        if (txt[i] == '.' || txt[i] == '?' || txt[i] == '!') {
             count++;
             if (flagOn) {
                 printf("[%d] %s\n", count, phrase);
             }
-            while (txt[i+1] == ' ' || txt[i+1] == '\n' || txt[i+1] == '\t') i++;
-            //limpar phrase
-            //memset(&phrase, 0, MAX_STR_SIZE);
-            phrase = (char*)malloc(MAX_STR_SIZE * sizeof(char));
+            while (txt[i+1] == ' ' || txt[i+1] == '\n' || txt[i+1] == '\t' || txt[i+1] == '\r'){
+                i++;
+            }
+            phrase = (char*)malloc(sizeof(char) * 1);
+            phrase[0] = '\0';
 			phraseSize = 0;
             continue;
 		}
-        phraseSize++;
 	}
     
     if (phraseSize != 0) {
