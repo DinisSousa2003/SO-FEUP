@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 
     char * content = NULL;
     char x;
-    size_t line_size = 0;
+    size_t content_size = 0;
     
     
     if (pipe(fd1) < 0 || pipe(fd2) < 0){
@@ -31,13 +31,42 @@ int main(int argc, char *argv[]){
     }
 
     else if (pid > 0){
-        while((x = getc(stdin)) != EOF){
-            /* parent */
-            realloc(content, sizeof(char) * 2);
+        x = getc(stdin);
+        while(x != EOF){
+            
+            content_size = 0;
+            content = realloc(content, sizeof(char) * (content_size + 2));
+            content[content_size] = x;
+            content[content_size + 1] = '\0';
+            content_size++;
 
+            /* pontuation */
+            if(x < 65 || x > 122){
+                while(((x = getc(stdin)) != EOF) && ((x < 65) || (x > 122))){
+                    content = realloc(content, sizeof(char) * (content_size + 2));
+                    content[content_size] = x;
+                    content[content_size + 1] = '\0';
+                    content_size++;
+                } 
+            }
+
+            /* word */
+            else{
+                while(((x = getc(stdin)) != EOF) && !(x < 65) && !(x > 122)){
+                    content = realloc(content, sizeof(char) * (content_size + 2));
+                    content[content_size] = x;
+                    content[content_size + 1] = '\0';
+                    content_size++;
+                } 
+            }
+
+            //fprintf(stdout, "%s---", content);
+            /* parent */
+            
+            
             /*write to pipe*/
             close(fd1[READ_END]);
-            //snprintf(line, LINESIZE, "%s", content);
+            snprintf(line, LINESIZE, "%s", content);
 
             if ((nbytes = write(fd1[WRITE_END], line, strlen(line))) < 0){
                 //fprintf(stderr, "Unable to write to pipe: %s\n", strerror(errno));
@@ -50,9 +79,10 @@ int main(int argc, char *argv[]){
             if ((nbytes = read(fd2[READ_END], line, LINESIZE)) < 0){
                 //fprintf(stderr, "Unable to read from pipe: %s\n", strerror(errno));
             }
-            fprintf(stdout, "%s", line);
+            
             close(fd2[READ_END]);
         }
+        free(content);
     }
 
     else{
