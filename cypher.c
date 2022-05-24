@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define test_size sizeof(char)
+#define MSGSIZE 2000
+//chars >64 && chars < 123
 
 int main(int argc, char *argv[])
 {
@@ -25,8 +26,14 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    char *str = NULL;
+    //char *str = NULL;
+    char str[MSGSIZE];
     size_t len_str = 0;
+
+	for (int i = 0; i < sizeof(str); i++)
+	{
+		str[i] = '\0';
+	}
 
     if ((pid = fork()) < 0) // fork
     {
@@ -35,17 +42,20 @@ int main(int argc, char *argv[])
     }
     else if (pid == 0) // children process
     {
-
         close(ptoc[1]);
         close(ctop[0]);
         
-        read(ptoc[0], str, test_size);
+        int r2 = read(ptoc[0], str, MSGSIZE);
         close(ptoc[0]);
+        printf("r2: %d\n", r2);
 
-        //code goes here
+        
+        /*code goes here*/
 
-        write(ctop[1], str, test_size);
+        int w2 = write(ctop[1], str, MSGSIZE);
         close(ctop[1]);
+
+        printf("w2: %d\n", w2);
         exit(EXIT_SUCCESS);
 
     }
@@ -57,21 +67,30 @@ int main(int argc, char *argv[])
         fseek(stdin, 0, SEEK_END);
         len_str = ftell(stdin);
         fseek(stdin, 0, SEEK_SET);
-        str = malloc(sizeof(char) * len_str);
+        /*str = malloc(sizeof(char) * len_str);
         fread(str, 1, len_str, stdin);
-
-        write(ptoc[1], str, test_size);
-        close(ptoc[1]);
-
-        /*if (waitpid(-1, NULL, 0) < 0)
+        */
+        char c;
+        int x = 0;
+        while ((c = getc(stdin)) != '\0')
         {
-            perror("waitpid");
-            exit(EXIT_FAILURE);
-        }*/
-        str = NULL;
-        read(ctop[0], str, test_size);
+            if (x > len_str) break;
+
+            str[x] = c;
+            x++;
+        }
+        
+
+        int w1 = write(ptoc[1], str, MSGSIZE);
+        close(ptoc[1]);
+        printf("w1: %d\n", w1);
+
+        
+
+        int r1 = read(ctop[0], str, MSGSIZE);
         close(ctop[0]);
 
+        printf("r1: %d\n", r1);
         fprintf(stdout, "%s", str);
     }
 
