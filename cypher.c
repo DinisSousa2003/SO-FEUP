@@ -7,7 +7,6 @@
 #define MSGSIZE 256
 #define READ_END 0
 #define WRITE_END 1
-//chars >64 && chars < 123
 
 
 int main(int argc, char *argv[])
@@ -74,12 +73,11 @@ int main(int argc, char *argv[])
 
         while (1)
         {
-            int r2 = read(ptoc[READ_END], buffer, MSGSIZE);
+            read(ptoc[READ_END], buffer, MSGSIZE);
             //printf("r2: %d\n", r2);
 
-            if(buffer[1] == end[1] && buffer[0] == end[0]) break;
+            if(buffer[1] == end[1] && buffer[0] == end[0]) break; //end of the message
 
-            /*code goes here*/
             for(int i = 0; i < numberOfElements; i++){
                 if(strcmp(buffer, strings1[i]) == 0){
                     strcpy(buffer, strings2[i]);
@@ -91,10 +89,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-        
-            /*code ends here*/
-
-            int w2 = write(ctop[WRITE_END], buffer, MSGSIZE);
+            write(ctop[WRITE_END], buffer, MSGSIZE);
             //printf("w2: %d\n", w2);
         }
         
@@ -121,12 +116,14 @@ int main(int argc, char *argv[])
             i = 0;
             buffer[i++] = x;
 
+            //Pontuation
             if(x < 65 || x > 122)
             {
                 while(((x = getc(stdin)) != EOF) && ((x < 65) || (x > 122))){
                     buffer[i++] = x;
                 }
             }
+            //Words
             else
             {
                 while(((x = getc(stdin)) != EOF) && !(x < 65) && !(x > 122)){
@@ -136,18 +133,16 @@ int main(int argc, char *argv[])
             }
             buffer[i] = '\0';
 
-            int w1 = write(ptoc[1], buffer, MSGSIZE);
+            write(ptoc[1], buffer, MSGSIZE);
             //printf("w1: %d\n", w1);
 
             it_counter++;
         }
         buffer[0] = '\0';
         buffer[1] = '1';
-        int w1 = write(ptoc[1], buffer, MSGSIZE);
+        write(ptoc[1], buffer, MSGSIZE);
 
         while(it_counter--){
-            //char buffer[MSGSIZE];
-            //memset(buffer, '\0', MSGSIZE);
             read(ctop[0],buffer , MSGSIZE);
             //printf("r1: %d\n", r1);
             fprintf(stdout, "%s", &buffer[0]);
