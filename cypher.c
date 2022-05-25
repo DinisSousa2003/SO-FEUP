@@ -4,8 +4,11 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define MSGSIZE 2000
+#define MSGSIZE 256
+#define READ_END 0
+#define WRITE_END 1
 //chars >64 && chars < 123
+
 
 int main(int argc, char *argv[])
 {
@@ -14,26 +17,15 @@ int main(int argc, char *argv[])
     int ctop[2]; // children to parent
 
     pid_t pid;
+    char buffer[MSGSIZE];
 
-    if (pipe(ptoc) < 0)
+    if (pipe(ptoc) < 0 || pipe(ctop) < 0)
     {
         // pipe failed
         exit(EXIT_FAILURE);
     }
-    if (pipe(ctop) < 0)
-    {
-        // pipe failed
-        exit(EXIT_FAILURE);
-    }
 
-    //char *str = NULL;
-    char str[MSGSIZE];
-    size_t len_str = 0;
-
-	for (int i = 0; i < sizeof(str); i++)
-	{
-		str[i] = '\0';
-	}
+    memset(buffer, '\0', MSGSIZE);
 
     if ((pid = fork()) < 0) // fork
     {
@@ -42,56 +34,102 @@ int main(int argc, char *argv[])
     }
     else if (pid == 0) // children process
     {
-        close(ptoc[1]);
-        close(ctop[0]);
-        
-        int r2 = read(ptoc[0], str, MSGSIZE);
-        close(ptoc[0]);
-        printf("r2: %d\n", r2);
 
-        
-        /*code goes here*/
+        char file_name[] = "cypher.txt";
 
-        int w2 = write(ctop[1], str, MSGSIZE);
-        close(ctop[1]);
+        char end[2];
+        memset(end, '\0', 2);
+        end[1] = '1';
 
-        printf("w2: %d\n", w2);
-        exit(EXIT_SUCCESS);
+        close(ptoc[WRITE_END]);
+        close(ctop[READ_END]);
 
-    }
-    else if (pid > 0) // parent process
-    {
-        close(ptoc[0]);
-        close(ctop[1]);
+        FILE * cypher_file = open(file_name, "r");
 
-        fseek(stdin, 0, SEEK_END);
-        len_str = ftell(stdin);
-        fseek(stdin, 0, SEEK_SET);
-        /*str = malloc(sizeof(char) * len_str);
-        fread(str, 1, len_str, stdin);
-        */
-        char c;
-        int x = 0;
-        while ((c = getc(stdin)) != '\0')
+        while (fscanf(cypher_file, "%s %s\n", ) > 0)
         {
-            if (x > len_str) break;
-
-            str[x] = c;
-            x++;
+            /* code */
         }
         
 
-        int w1 = write(ptoc[1], str, MSGSIZE);
-        close(ptoc[1]);
-        printf("w1: %d\n", w1);
+        
+  
+        //int counter = 1000;
+        while (1)
+        {
+            int r2 = read(ptoc[READ_END], buffer, MSGSIZE);
+            //printf("r2: %d\n", r2);
+
+            if(buffer[1] == end[1] && buffer[0] == end[0]) break;
+
+            /*code goes here*/
 
         
+            /*code ends here*/
 
-        int r1 = read(ctop[0], str, MSGSIZE);
+            int w2 = write(ctop[WRITE_END], buffer, MSGSIZE);
+            //printf("w2: %d\n", w2);
+        }
+        
+        close(ptoc[READ_END]);
+        close(ctop[WRITE_END]);
+        exit(EXIT_SUCCESS);
+        
+    }
+    else if (pid > 0) // parent process
+    {
+        char x;
+
+        close(ptoc[0]);
+        close(ctop[1]);
+
+        int it_counter = 0;
+
+
+        x = getc(stdin);
+        int i = 0;
+
+        while (x != EOF)
+        {
+            i = 0;
+            buffer[i++] = x;
+
+            if(x < 65 || x > 122)
+            {
+                while(((x = getc(stdin)) != EOF) && ((x < 65) || (x > 122))){
+                    buffer[i++] = x;
+                }
+            }
+            else
+            {
+                while(((x = getc(stdin)) != EOF) && !(x < 65) && !(x > 122)){
+                    buffer[i++] = x; 
+                }
+
+            }
+            buffer[i] = '\0';
+
+            int w1 = write(ptoc[1], buffer, MSGSIZE);
+            //printf("w1: %d\n", w1);
+
+            it_counter++;
+        }
+        buffer[0] = '\0';
+        buffer[1] = '1';
+        int w1 = write(ptoc[1], buffer, MSGSIZE);
+
+        while(it_counter--){
+            //char buffer[MSGSIZE];
+            //memset(buffer, '\0', MSGSIZE);
+            int r1 = read(ctop[0],buffer , MSGSIZE);
+            //printf("r1: %d\n", r1);
+            fprintf(stdout, "%s", &buffer[0]);
+            
+
+        }
+        close(ptoc[1]);
         close(ctop[0]);
-
-        printf("r1: %d\n", r1);
-        fprintf(stdout, "%s", str);
+        
     }
 
     return 0;
