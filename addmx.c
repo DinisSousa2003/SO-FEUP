@@ -30,8 +30,9 @@ int main(int argc, char* argv[]){
     }
     
 
-    int n_row1, n_col1, n_row2, n_col2;
+    int n_row1, n_col1, n_row2, n_col2; 
 
+    /*read matrices size*/
     fscanf(matrix1, "%dx%d", &n_row1, &n_col1);
     fscanf(matrix2, "%dx%d", &n_row2, &n_col2);
     
@@ -44,6 +45,7 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
+    /*set shared memory*/
     int *mtx1  = mmap(NULL, sizeof(int) * n_row1 * n_col1, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, 0, 0);
     int *mtx2  = mmap(NULL, sizeof(int) * n_row2 * n_col2, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, 0, 0);
     int *mtx_res=mmap(NULL, sizeof(int) * n_row1 * n_col1, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, 0, 0);
@@ -51,9 +53,8 @@ int main(int argc, char* argv[]){
     char * line = NULL;
     size_t line_size = 0;
 
-    int i;
-    
-    i = 0;
+    /*read matrix1*/
+    int i = 0;
     while (getline(&line,&line_size, matrix1) > 0)
     {
         char *token = strtok(line, " ");
@@ -65,6 +66,7 @@ int main(int argc, char* argv[]){
 		}
     }
     
+    /*read matrix2*/
     i = 0;
     while (getline(&line,&line_size, matrix2) > 0)
     {
@@ -77,24 +79,26 @@ int main(int argc, char* argv[]){
 		}
     }
 
+    /*close files*/
     fclose(matrix1);
     fclose(matrix2);
     
+    /*initialize result matrix*/
     for (int x = 0; x < n_row1 * n_col1; x++){
         *(mtx_res + x) = 0;
     }
 
-
+    /*parent generate process to calculate each collum*/
     for (int c = 0; c < n_col1; c++){
         pid_t pid = fork();
         
 
-        if (pid < 0)
+        if (pid < 0) //fork
         {
             perror("fork");
             exit(EXIT_FAILURE);
         }
-        if (pid == 0)
+        if (pid == 0) //children process
         {
             for (int r = 0; r < n_row1; r++)
             {
@@ -115,6 +119,7 @@ int main(int argc, char* argv[]){
 		}
 	} 
     
+    /*print result matrix*/
     for (int r = 0; r < n_row1; r++)
     {
         for(int c = 0; c < n_col1; c++)
