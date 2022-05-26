@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
         printf("Wrong usage: cypher < file1 ");
         exit(EXIT_FAILURE);
     }
-    
+
 
     int ptoc[2]; // parent to children
     int ctop[2]; // children to parent
@@ -111,6 +111,16 @@ int main(int argc, char *argv[])
         
         close(ptoc[READ_END]);
         close(ctop[WRITE_END]);
+
+        while (numberOfElements-- >= 0)
+        {
+            free(strings1[numberOfElements]);
+            free(strings2[numberOfElements]);
+        }
+        
+        free(strings1);
+        free(strings2);
+
         exit(EXIT_SUCCESS);
 
         /* end of child process */
