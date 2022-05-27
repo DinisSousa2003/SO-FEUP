@@ -34,47 +34,40 @@ int main(int argc, char* argv[]){
     //N - number of chars
     int fileNumber = flagOn + 1;
     FILE *fp;
-    char *txt;
+    char txt;
     fp = fopen(argv[fileNumber], "r");
-    if(fp == NULL){
-        printf("Error opening the file.\n");
-        return 1;
-    }
-    fseek(fp, 0, SEEK_END);
-    int N = ftell(fp);
-    txt = (char*) malloc(N+1*sizeof(char));
-    fseek(fp, 0, SEEK_SET);
-    fread(txt, N+1, 1, fp);
-    //printf("%s", txt);
-    fclose(fp);
-      
-
-
 	
 	int phraseSize = 0, count = 0;
     char* phrase = (char*)malloc(sizeof(char) * 1);
     phrase[0] = '\0';
-	
-	for(int i = 0; i < N; i++) {
+
+	txt = fgetc(fp);
+	while(txt != EOF){
         phrase = realloc(phrase, sizeof(char) * phraseSize + 2);
-		phrase[phraseSize] = txt[i];
+		phrase[phraseSize] = txt;
         phrase[phraseSize + 1] = '\0';
         phraseSize++;
 
-        if (txt[i] == '.' || txt[i] == '?' || txt[i] == '!') {
+        if (txt == '.' || txt == '?' || txt == '!') {
             count++;
             if (flagOn) {
                 printf("[%d] %s\n", count, phrase);
             }
-            while (txt[i+1] == ' ' || txt[i+1] == '\n' || txt[i+1] == '\t' || txt[i+1] == '\r'){
-                i++;
+            txt = fgetc(fp);
+            while ((txt == ' ') || (txt == '\n') || (txt == '\t') || (txt == '\r')){
+                txt = fgetc(fp); //consume withespaces
             }
             phrase = (char*)malloc(sizeof(char) * 1);
             phrase[0] = '\0';
 			phraseSize = 0;
             continue;
 		}
+        else{
+            txt = fgetc(fp);
+        }
 	}
+
+    fclose(fp);
     
     if (phraseSize != 0) {
         count++;
@@ -82,6 +75,8 @@ int main(int argc, char* argv[]){
             printf("[%d] %s\n", count, phrase);
         }
     } 
+
+    free(phrase);
 
     if (!flagOn) printf("%d \n",count);
 	
